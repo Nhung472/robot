@@ -3,7 +3,7 @@
 
 # ======= RUN ======= #
 run: 
-  name: DQN_Train # name of the run
+  name: DQN # name of the run
 
 # ======= MODEL ======= #
 model:

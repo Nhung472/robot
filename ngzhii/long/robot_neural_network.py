@@ -111,7 +111,6 @@ def update_weights(policy_net, target_net, optimizer, memory, batch_size, gamma,
 
 
 """ =========== Soft-Actor Critic =========== """
-# Implementation inspired from https://github.com/pranz24/pytorch-soft-actor-critic
 
 def update(target, source, tau):
     """Update Method for SAC Only

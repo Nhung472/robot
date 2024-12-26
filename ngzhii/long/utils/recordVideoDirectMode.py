@@ -10,7 +10,7 @@ def ensure_directory_exists(directory):
 def record_direct_mode(p, step, img_dir='./images'):
     """Capture and save an image using the direct camera setup."""
     ensure_directory_exists(img_dir)  # Ensure the directory exists
-    
+
     # Set up the camera
     width = 640
     height = 480
@@ -38,7 +38,8 @@ def record_direct_mode(p, step, img_dir='./images'):
     img = np.array(img, dtype=np.uint8)
 
     # Save the image
-    cv2.imwrite(os.path.join(img_dir, str(step) + ".png"), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+    img_path = os.path.join(img_dir, f"{step}.png")
+    cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
 def record_gui_mode(p, step, img_dir='./images'):
     """Capture and save an image using the GUI camera setup."""
@@ -64,11 +65,15 @@ def record_gui_mode(p, step, img_dir='./images'):
     img = np.array(img, dtype=np.uint8)
 
     # Save the image
-    cv2.imwrite(os.path.join(img_dir, str(step) + ".png"), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+    img_path = os.path.join(img_dir, f"{step}.png")
+    cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
 def stitch_video_direct_mode(episode, img_dir='./images'):
-    """Combine images into a video file."""
-    ensure_directory_exists(img_dir)  # Ensure the directory exists
+    """Combine images into a playable video."""
+    # Ensure the directory exists
+    if not os.path.exists(img_dir):
+        print(f"Error: Directory {img_dir} does not exist.")
+        return
 
     # Prepare output video settings
     width = 640
@@ -82,6 +87,11 @@ def stitch_video_direct_mode(episode, img_dir='./images'):
     file_list = [file for file in os.listdir(img_dir) if file.endswith(".png")]
     file_list = sorted(file_list, key=lambda x: int(os.path.splitext(x)[0]))
 
+    # Check if any images exist
+    if not file_list:
+        print("Error: No images found in the directory.")
+        return
+
     # Write images to video
     for file in file_list:
         img_path = os.path.join(img_dir, file)
@@ -92,9 +102,15 @@ def stitch_video_direct_mode(episode, img_dir='./images'):
             continue
 
         # Ensure the image has the correct resolution
-        img = cv2.resize(img, (width, height))
+        if img.shape[:2] != (height, width):
+            print(f"Resizing frame {file} to {width}x{height}")
+            img = cv2.resize(img, (width, height))
+
+        # Ensure the frame has valid data type
+        img = np.array(img, dtype=np.uint8)
         out.write(img)
 
+    # Finalize the video
     out.release()
 
     # Verify if the video was created successfully
@@ -103,6 +119,30 @@ def stitch_video_direct_mode(episode, img_dir='./images'):
     else:
         print("Error: Video file was not created.")
 
-    # Optionally clean up the images
+    # Clean up the images
     for file in file_list:
         os.remove(os.path.join(img_dir, file))
+
+# Example usage
+if __name__ == "__main__":
+    class FakePyBullet:
+        """Mock PyBullet class for demonstration purposes."""
+        def computeViewMatrix(self, camera_pos, target_pos, up_vector):
+            return "fake_view_matrix"
+
+        def computeProjectionMatrixFOV(self, fov, aspect, near, far):
+            return "fake_projection_matrix"
+
+        def getCameraImage(self, width, height, viewMatrix, projectionMatrix, shadow, lightDirection, renderer):
+            return (0, 0, np.random.randint(0, 255, (height, width, 3), dtype=np.uint8), None, None)
+
+        def getDebugVisualizerCamera(self):
+            return [None, None, "fake_view_matrix", "fake_projection_matrix"]
+
+    # Simulate recording and video creation
+    p = FakePyBullet()
+    for step in range(10):  # Record 10 frames
+        record_direct_mode(p, step)
+
+    # Stitch the recorded frames into a video
+    stitch_video_direct_mode(episode=1)

@@ -43,48 +43,6 @@ conda activate two_wheel_robot
 pip install -r requirements.txt 
 ```
 
-## Models used
-| Model | Agent | State Space   | Action Space | Actions per time step   |
-| :---: | :---:  | :---: | :---: | :---: |
-| DQN | Single | Continuous   | Discrete   | Single (Both Wheels) |
-| DQNMA | Single | Continuous   | Discrete   | Multiple (for each wheel) |
-| REINFORCE | Single | Continuous   | Discrete   | Single (Both Wheels) | 
-| A2CSA | Single | Continuous   | Discrete   | Single (Both Wheels) |
-| MAA2C | Multiple | Continuous   | Discrete   | Multiple (for each wheel) |
-| SAC | Single | Continuous   | Continuous   | Single (Both Wheels) |
-
-## Folders
-### 1. Object Models
-This folder stores the two-wheel robot xml file created in Gazebo. The object models for the slope is also stored here. 
-
-### 2. Configs
-This folder stores the configuration files (.yaml) for running the training and testing experiments. 
-
-### 3. Results
-This folder stores the training and testing results of the model runs and the saved models.
-
-## Source Code
-
-### 1. robot_environment.py
-This file contains the robot's environment that interfaces with the PyBullet environment. It loads the Two-Wheel Robot model into the Pybullet environment and sets up the terrain. The code also retrieves the state observations of the Two-Wheel Robot and controls the robot based on the actions given by the model. This class also defines the reward functions to be given to the agent during training.
-
-### 2. robot_move.py
-This file contains the MoveRobot class for moving the robot during training and testing.
-This is the main file where all classes in the source code interact with each other during training/testing. The class reads the configuration file parameters to initialise other classes. The Two-Wheel Robot is trained by running through episodes. All training and testing metrics are logged and the results are plotted in the results subdirectories.
-
-### 3. robot_agent.py
-This defines the operations and functions for the tensorflow models, the class can update the model weights via backpropagating. The class also enables saving of the tensorflow model weights.
-
-### 4. robot_neural_network.py
-This file contain both PyTorch and Tensorflow 2 model structures. It defines the Fully-Connected Networks of the Tensorflow models and the model classes of the PyTorch DQN and SAC. The select_action functions for the models are also defined here to select greedy actions or random actions for balancing the exploration and exploitation trade-off.
-
-### 5. robot_train.py
-The main code for training an agent to balance and move the Two-Wheel Robot. It takes in a training configuration file which stores all the training parameters. Users can also enable DIRECT mode (Not using GUI) to speed up training.
-
-### 6. robot_test.py
-The main code for testing the trained agent. The user can run this file to validate and test the model to visualise the performance of the trained agent.
-
-
 ## Training Robot Agent
 1. Define your training config file by creating a new config.yaml under configs directory. Rename the run name for every new run so that a new subdirectory will be created under results/train/<run_name> for storing the training plots and model weights.
 
@@ -95,62 +53,6 @@ For example in main.yaml:
 run: 
   name: DQN_Train
 
-model:
-  name: DQN
-  learning_rate_actor: 1.0e-6
-  learning_rate_critic: 1.0e-3
-  batch_size: 1 # num of steps before update
-  gamma: 0.99
-  hidden_layer_size: [512,256,128]
-  weight_decay: [0,0,0]
-  dropout_rate: [0,0,0]
-  tau: 0.005
-
-epsilon_greedy:
-  eps_init: 0.95
-  eps_end: 0.05
-  eps_decay: 1.0e-4
-  epsilon_decay_type: 'exponential'
-  stretched_A: 0.5
-  stretched_B: 0.1
-  stretched_C: 0.1
-
-training:
-  device: 'cpu'
-  num_workers: 40 # num of cpu cores to use for parallel computation
-  num_train_episodes: 3000
-  max_steps_per_episode: 50000 # 20secs per ep
-  n_step: False
-  base_results_dir: './results/train/'
-  
-  save_model_weights: True
-
-testing:
-  device: 'auto' # auto, cpu, cuda:0
-  num_workers: 40 # num of cpu cores to use for parallel computation
-  num_test_episodes: 1000
-  max_steps_per_episode: 50000
-  base_results_dir: './results/test/' # defines the base directory to create a folder with the config yaml name
-  record_video: True
-
-environment:
-  render_mode: 'DIRECT' # DIRECT, GUI
-  video_mode: False # for recording video in direct mode
-  enable_keyboard: False
-  environment_type: 'FLAT'
-  x_distance_to_goal: 30
-  time_step_size: 1/20 # user time step size, controls frequency of action made by the robot
-  distance_to_goal_penalty: 0.7
-  roll_penalty: 0.5
-  yaw_penalty: 0.3
-  time_penalty: 0.3
-  target_velocity_change: 0.5
-
-plotting:
-  plot_trajectories_episode_interval: 100
-  record_trajectory_time_step_interval: 5 # decrease to increase rate of recording coordinates
-
-```
 
 2. After editing the config file, run the following python code to train the agent.
 ```
